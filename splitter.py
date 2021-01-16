@@ -6,6 +6,11 @@ import sys
 import xml.etree.ElementTree as ET
 import os
 import shutil
+'''
+Removed unneccesary comments.
+Revamped command list creation.
+Don't forget to put ffmpeg in folder you welp dumbass!
+'''
 
 def convert_time(time_secs):
     fraction = int((time_secs % 1) * 1000)
@@ -42,7 +47,7 @@ def build_segments(filename):
             base_chapter = name
             chapter_section = 0
         # The 00 is ignored if chapter_section == 0. (personal preference: Want names to be as short as possible. I didnt like 00 for every book)
-        name = f'{base_chapter}{chapter_section if chapter_section!=0 else ""}'
+        name = f'{base_chapter}{"_" + str(chapter_section) if chapter_section!=0 else ""}'
         chapter_section += 1
         start_time =  marker[1].text
         name = name.replace(" ", "_")
@@ -71,8 +76,11 @@ def split_file(filename, segments):
     subdir.mkdir()
     for segment in segments:
         segname = f"{subdir}/{fn.stem}_{segment[0]}{fn.suffix}"
-        cmd = f"ffmpeg -i {filename} -acodec copy -ss {segment[1]} -to {segment[2]} {segname}"
+        # GOT IT. It is the command = cmd.split() that split it all based on "spaces". We need to split cmd and add ["ffmpeg", "-i", "asdf123"] in front into command.
+        cmd = f"ffmpeg -i -acodec copy -ss {segment[1]} -to {segment[2]}"
         command = cmd.split()
+        command.insert(2, filename  )
+        command.append( segname   )
         try:
             # ffmpeg requires an output file and so it errors when it does not
             # get one so we need to capture stderr, not stdout.
@@ -84,11 +92,12 @@ def split_file(filename, segments):
                 print(f"Got line: {line}")
 
 # Get all .mp3 files in current directory
-cur_dir = os.getcwd()
+cur_dir =  os.getcwd()
 mp3_files = []
 for file in os.listdir(cur_dir):
     if file.endswith(".mp3"):
-        mp3_files.append(os.path.join(cur_dir, file))
+        path=os.path.join(cur_dir, file)
+        mp3_files.append(r"{}".format(path))
 
 
 for filename in mp3_files:
