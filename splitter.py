@@ -4,6 +4,8 @@ import pathlib
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+import os
+
 
 def convert_time(time_secs):
     fraction = int((time_secs % 1) * 1000)
@@ -18,6 +20,7 @@ def build_segments(filename):
     x = audio.tag.user_text_frames
     xmltext = x.get("OverDrive MediaMarkers").text
     markers = ET.fromstring(xmltext)
+    print(markers)
     base_chapter = "invalid I hope I never have chapters like this"
     chapter_section = 0
     segments = []
@@ -73,11 +76,16 @@ def split_file(filename, segments):
                 print(f"Got line: {line}")
 
 
+cur_dir = os.getcwd()
+mp3_files = []
+for file in os.listdir(cur_dir):
+    if file.endswith(".mp3"):
+        print(os.path.join(cur_dir, file))
+        mp3_files.append(os.path.join(cur_dir, file))
 
-for filename in sys.argv[1:]:
+
+for filename in mp3_files:
     print(filename)
     end_time, segments = build_segments(filename)
     segments = complete_segments(segments, end_time)
     split_file(filename, segments)
-
-
