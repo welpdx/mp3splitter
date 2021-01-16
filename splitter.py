@@ -5,7 +5,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 import os
-
+import shutil
 
 def convert_time(time_secs):
     fraction = int((time_secs % 1) * 1000)
@@ -19,8 +19,14 @@ def build_segments(filename):
     end_time = convert_time(audio.info.time_secs)
     x = audio.tag.user_text_frames
     xmltext = x.get("OverDrive MediaMarkers").text
+    print("xml before: " , xmltext)
+    xmltext = xmltext.replace(" ", "")
+    #xmltext = xmltext.replace(":", "")
+    print("xml after: " , xmltext)
     markers = ET.fromstring(xmltext)
-    print(markers)
+    #print(markers)
+    #markers = markers.replace(" ", "_")
+    #print("m2 :", markers)
     base_chapter = "invalid I hope I never have chapters like this"
     chapter_section = 0
     segments = []
@@ -35,6 +41,11 @@ def build_segments(filename):
         #    Chapter 1-01      03:21.507
         #    Chapter 1-02      06:27.227
         name = marker[0].text.strip()
+        # Not the place to filter our the whitespace
+        #print(name)
+        #name = name.replace(" ", "")
+        name = name.replace(":", "")
+        print("name: " , name)
         if not name.startswith(base_chapter):
             base_chapter = name
             chapter_section = 0
@@ -60,6 +71,9 @@ def complete_segments(segments, final_time):
 def split_file(filename, segments):
     fn = pathlib.Path(filename)
     subdir = pathlib.Path(fn.stem)
+    if os.path.exists(subdir):
+        input("Folder exists already. Press enter to continue.")
+        shutil.rmtree(subdir)
     subdir.mkdir()
     for segment in segments:
         segname = f"{subdir}/{fn.stem}_{segment[0]}{fn.suffix}"
@@ -80,11 +94,15 @@ cur_dir = os.getcwd()
 mp3_files = []
 for file in os.listdir(cur_dir):
     if file.endswith(".mp3"):
-        print(os.path.join(cur_dir, file))
         mp3_files.append(os.path.join(cur_dir, file))
 
 
-for filename in mp3_files:
+m = []
+m.append(mp3_files[-1])
+print(m)
+
+
+for filename in m:
     print(filename)
     end_time, segments = build_segments(filename)
     segments = complete_segments(segments, end_time)
