@@ -45,6 +45,7 @@ def build_segments(filename):
         #print(name)
         #name = name.replace(" ", "")
         name = name.replace(":", "")
+        name = name.replace("/", "_")
         print("name: " , name)
         if not name.startswith(base_chapter):
             base_chapter = name
@@ -97,12 +98,7 @@ for file in os.listdir(cur_dir):
         mp3_files.append(os.path.join(cur_dir, file))
 
 
-m = []
-m.append(mp3_files[-1])
-print(m)
-
-
-for filename in m:
+for filename in mp3_files:
     print(filename)
     end_time, segments = build_segments(filename)
     segments = complete_segments(segments, end_time)
