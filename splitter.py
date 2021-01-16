@@ -19,14 +19,8 @@ def build_segments(filename):
     end_time = convert_time(audio.info.time_secs)
     x = audio.tag.user_text_frames
     xmltext = x.get("OverDrive MediaMarkers").text
-    print("xml before: " , xmltext)
-    xmltext = xmltext.replace(" ", "")
-    #xmltext = xmltext.replace(":", "")
-    print("xml after: " , xmltext)
+    print("OverDrive MediaMarkers: " , xmltext)
     markers = ET.fromstring(xmltext)
-    #print(markers)
-    #markers = markers.replace(" ", "_")
-    #print("m2 :", markers)
     base_chapter = "invalid I hope I never have chapters like this"
     chapter_section = 0
     segments = []
@@ -41,16 +35,14 @@ def build_segments(filename):
         #    Chapter 1-01      03:21.507
         #    Chapter 1-02      06:27.227
         name = marker[0].text.strip()
-        # Not the place to filter our the whitespace
-        #print(name)
-        #name = name.replace(" ", "")
+        # Replaces characters that misses with complete_segments
         name = name.replace(":", "")
         name = name.replace("/", "_")
-        print("name: " , name)
         if not name.startswith(base_chapter):
             base_chapter = name
             chapter_section = 0
-        name = f"{base_chapter}_{chapter_section:02}"
+        # The 00 is ignored if chapter_section == 0. (personal preference: Want names to be as short as possible. I didnt like 00 for every book)
+        name = f'{base_chapter}{chapter_section if chapter_section!=0 else ""}'
         chapter_section += 1
         start_time =  marker[1].text
         name = name.replace(" ", "_")
@@ -72,6 +64,7 @@ def complete_segments(segments, final_time):
 def split_file(filename, segments):
     fn = pathlib.Path(filename)
     subdir = pathlib.Path(fn.stem)
+    # Gives user a warning before deleting existing folder.
     if os.path.exists(subdir):
         input("Folder exists already. Press enter to continue.")
         shutil.rmtree(subdir)
@@ -90,7 +83,7 @@ def split_file(filename, segments):
             for line in output.splitlines():
                 print(f"Got line: {line}")
 
-
+# Get all .mp3 files in current directory
 cur_dir = os.getcwd()
 mp3_files = []
 for file in os.listdir(cur_dir):
